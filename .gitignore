@@ -1,0 +1,34 @@
+deployment.local.json
+
+# Local deployment config (contains env/account specific values)
+*-deployment-config.json
+deployment_config.json
+deployment.json
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# macOS / editor noise
+.DS_Store
+
+# Terraform local cache/state artifacts
+terraform/.terraform/
+terraform/.terraform.lock.hcl
+terraform/*.tfstate
+terraform/*.tfstate.*
+terraform/crash.log
+terraform/crash.*.log
+*.tfvars
+*.tfvars.json
+
+# Logs / temp
+*.log
+tmp/

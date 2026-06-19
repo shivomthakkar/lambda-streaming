@@ -1,0 +1,4 @@
+fastapi==0.104.1
+uvicorn==0.24.0
+boto3==1.40.18
+PyYAML==6.0.2

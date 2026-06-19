@@ -1,0 +1,33 @@
+{
+  "terraform_state": {
+    "bucket": "sample-service-tf-state-example-us-east-2",
+    "region": "us-east-2"
+  },
+  "stage_name": {
+    "aws_region": "us-east-2",
+    "project_name": "sample-service",
+    "role_name": "sample-service-role",
+    "ecr_repository_name": "sample-repository",
+    "app_function": "run:app",
+    "log_level": "INFO",
+    "xray_tracing": true,
+    "apigateway_policy": "../api-gateway-policy.json",
+    "endpoint_configuration": "PRIVATE",
+    "vpc_config": {
+      "SubnetIds": [
+        "subnet-sample-a",
+        "subnet-sample-b"
+      ],
+      "SecurityGroupIds": [
+        "sg-sample"
+      ],
+      "vpc_endpoint_id": "vpce-sample"
+    },
+    "lambda_memory_size": 512,
+    "lambda_timeout_seconds": 600,
+    "authorizer": {
+      "arn": "arn:aws:lambda:us-east-2:123456789012:function:sample-authorizer",
+      "result_ttl": 300
+    }
+  }
+}
