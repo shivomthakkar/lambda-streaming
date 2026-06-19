@@ -176,12 +176,90 @@ With explicit config:
 ./scripts/destroy.sh --env <environment_name> --config ./deployment_config.json --confirm
 ```
 
+## Terraform: How To Use It
+
+### What Terraform Manages
+
+The Terraform module in `terraform/` manages:
+- Lambda function (container image)
+- CloudWatch log group for Lambda
+- API Gateway REST API, methods, integrations, deployment, and stage
+- Lambda invoke permissions for API Gateway
+- Optional Lambda authorizer wiring (when `authorizer.arn` is set)
+
+It references (does not create) these existing resources:
+- IAM role (`role_name`)
+- ECR repository (`ecr_repository_name`)
+
+### Standard Terraform Flow
+
+If you use scripts, they already run `terraform init`, `validate`, and `apply`/`destroy` for you.
+
+If you run Terraform manually:
+
+```bash
+cd terraform
+terraform init
+terraform validate
+terraform plan
+terraform apply
+```
+
+Important:
+- Backend state is in S3, configured from `deployment_config.json`.
+- Use the same environment key in both `--env` and your config JSON.
+
+### What To Expect During Deploy
+
+`./scripts/deploy.sh` does the following in order:
+1. Reads and validates deployment config values.
+2. Builds Docker image for `linux/amd64`.
+3. Pushes image to ECR with a computed image tag.
+4. Initializes Terraform backend (`terraform/<project>/<env>/terraform.tfstate` key pattern).
+5. Runs `terraform validate` and `terraform apply`.
+6. Verifies Lambda exists after apply.
+
+### Useful Terraform Outputs
+
+After a successful apply, these outputs are available:
+- `api_invoke_url`
+- `lambda_function_name`
+- `lambda_function_arn`
+- `api_gateway_rest_api_id`
+- `ecr_repository_url`
+
+Get outputs manually:
+
+```bash
+cd terraform
+terraform output
+terraform output -raw api_invoke_url
+```
+
+### Streaming-Specific Behavior
+
+- AWS provider must support API Gateway streaming attributes.
+- API Gateway integrations are configured with `response_transfer_mode = "STREAM"`.
+- Integration URI uses Lambda response-streaming path (`2021-11-15`).
+- Lambda runtime sets `AWS_LWA_INVOKE_MODE=response_stream`.
+
+### Common Failure Cases
+
+- `terraform init` backend/credentials error:
+   Use valid AWS credentials/profile before running scripts or Terraform.
+- Private API policy error (`resource policy` missing):
+   Ensure `apigateway_policy` points to a valid readable file.
+- `PRIVATE` endpoint validation error:
+   Ensure `vpc_config.vpc_endpoint_id` is set.
+- ECR push/tag immutability errors:
+   Verify repository policy and ensure your tag strategy is not reusing immutable tags incorrectly.
+- Lambda import/permission errors in container:
+   Rebuild image and verify file permissions in the image are readable by Lambda runtime.
+
 ## Terraform Notes
 
 - AWS provider version is pinned to `>= 6.25.0` for API Gateway response streaming support.
-- API Gateway integrations use `response_transfer_mode = "STREAM"`.
-- Integration URI uses Lambda response-streaming invocation path (`2021-11-15`).
-- Lambda runtime sets `AWS_LWA_INVOKE_MODE=response_stream`.
+- Terraform version requirement is `>= 1.5.0`.
 
 ## Testing
 
